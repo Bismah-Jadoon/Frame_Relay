@@ -1,115 +1,159 @@
-# Frame_Relay
+# Frame_Relay_Multipoint
 
 ---
 
-# Border Gateway Protocol (BGP) Topology Overview
+# Frame Relay Multipoint Network with Logical Diagram
 
-This README provides an in-depth explanation of the BGP topology configured in the uploaded Cisco Packet Tracer file. It describes the configuration and operation of the Border Gateway Protocol (BGP) in this multipoint setup and explains key concepts related to BGP and Autonomous Systems (AS).
-
----
-
-## **Topology Overview**
-
-The BGP topology consists of:
-- **Four Autonomous Systems (AS):**  
-  - **AS 700:** Contains router R70.  
-  - **AS 800:** Contains router R80.  
-  - **AS 1001:** Contains router R1001.  
-  - **AS 1002:** Contains router R1002.  
-  - **AS 1003:** Contains router R1003.  
-
-- **Frame Relay Multipoint Configuration:**  
-  The routers are interconnected via Frame Relay links with a multipoint setup, supporting inter-AS communication.
-
-- **IP Address Assignments:**  
-  Each link has been assigned a /30 subnet for point-to-point communication.
-
-  Examples:  
-  - 100.0.1.0/30 between R700 and R800.  
-  - 100.0.2.0/30 between R700 and R1002.
+This README provides a comprehensive explanation of the Frame Relay multipoint network setup, including the physical topology, logical design, and configuration details. The network demonstrates a Frame Relay WAN environment with interconnected routers in a hub-and-spoke architecture.
 
 ---
 
-## **Key Concepts of BGP**
+## **Overview**
 
-### **What is BGP?**
-BGP (Border Gateway Protocol) is the protocol used to exchange routing information between autonomous systems (AS) on the internet. BGP is classified as an exterior gateway protocol (EGP) and is designed to ensure scalability and stability in large networks.
+### **Physical Topology**
+The physical topology, as shown in the Cisco Packet Tracer screenshot, includes:
+1. **Four Routers**:
+   - **R0, R1, R2, R3**: Each connected via serial interfaces to a central Frame Relay cloud (`Cloud0`).
+2. **Frame Relay Cloud**:
+   - The cloud acts as a switching point for establishing virtual circuits (VCs).
+3. **Serial Links**:
+   - Each router connects to the cloud using Serial interfaces (S0/0 or S0/0/0).
 
-### **Types of BGP**
-1. **iBGP (Internal BGP):** Runs between routers in the same AS.
-2. **eBGP (External BGP):** Runs between routers in different AS.
+### **Logical Diagram**
+The logical diagram outlines:
+1. **DLCI (Data Link Connection Identifier)**:
+   - Each connection is represented by a unique DLCI assigned to routers.
+   - **DLCI Values**:
+     - Between R0 and R1: DLCI 101 and 401.
+     - Between R0 and R2: DLCI 201 and 202.
+     - Between R2 and R3: DLCI 301 and 302.
+     - Between R1 and R3: DLCI 402.
+2. **IP Addressing**:
+   - The logical topology uses two subnets:
+     - **10.1.0.0/29**: For interconnecting R0, R2, and R3.
+     - **10.4.0.0/30**: For interconnecting R1 and R3.
 
 ---
 
-## **Autonomous Systems (AS)**
+## **Key Concepts**
 
-An **Autonomous System (AS)** is a collection of IP networks and routers under the control of a single organization that presents a common routing policy to the internet. Each AS is assigned a unique Autonomous System Number (ASN).
+### **What is Frame Relay?**
+Frame Relay is a WAN technology that uses virtual circuits (VCs) to interconnect devices over a shared network. It provides cost-effective communication for bursty traffic by efficiently utilizing bandwidth.
 
-**AS in the Topology:**  
-- **AS 700**: Represents an ISP or large enterprise.  
-- **AS 800, AS 1001, AS 1002, AS 1003**: Smaller organizations or customers connected to the ISP.  
+### **Multipoint Configuration**
+- **Multipoint Frame Relay**: A single physical interface can connect to multiple destinations using unique DLCIs.
+- Routing decisions are based on DLCIs, allowing communication between all routers in the topology.
 
 ---
 
-## **BGP Configuration Steps**
+## **Network Configuration Details**
 
-### **Step 1: Define AS Numbers**
-Each router is assigned an AS number based on its grouping. For example:  
-- Router R70 belongs to AS 700.  
-- Router R1001 belongs to AS 1001.
+### **1. IP Addressing**
+Each interface has been assigned IP addresses as follows:
+- **10.1.0.0/29** for the main network connecting R0, R2, and R3.
+- **10.4.0.0/30** for the network between R1 and R3.
 
-### **Step 2: Configure BGP on Each Router**
-1. Use the `router bgp <AS_NUMBER>` command to start BGP configuration.
-2. Establish BGP neighbor relationships:
-   - For eBGP, use the `neighbor <IP_ADDRESS> remote-as <AS_NUMBER>` command.
-   - For iBGP (if applicable), establish neighbors within the same AS.
+### **2. Frame Relay DLCI Assignments**
+- **DLCI Mapping**:
+  - R0 ↔ R1: 101 (R0) ↔ 401 (R1)
+  - R0 ↔ R2: 201 (R0) ↔ 202 (R2)
+  - R2 ↔ R3: 301 (R2) ↔ 302 (R3)
+  - R1 ↔ R3: 402 (R1) ↔ 102 (R3)
 
-### **Step 3: Advertise Networks**
-Networks to be advertised are configured using the `network` command under BGP configuration mode. Example:  
+---
+
+### **Router Configuration**
+
+#### **Router R0 Configuration**
 ```bash
-router bgp 1001
-  network 100.0.0.0 mask 255.255.255.252
-  neighbor 100.0.0.1 remote-as 700
+interface Serial0/0/0
+ encapsulation frame-relay
+ ip address 10.1.0.1 255.255.255.248
+ frame-relay map ip 10.1.0.2 201 broadcast
+ frame-relay map ip 10.1.0.3 101 broadcast
+```
+
+#### **Router R1 Configuration**
+```bash
+interface Serial0/0/0
+ encapsulation frame-relay
+ ip address 10.4.0.1 255.255.255.252
+ frame-relay map ip 10.4.0.2 402 broadcast
+ frame-relay map ip 10.1.0.3 401 broadcast
+```
+
+#### **Router R2 Configuration**
+```bash
+interface Serial0/0/0
+ encapsulation frame-relay
+ ip address 10.1.0.2 255.255.255.248
+ frame-relay map ip 10.1.0.1 201 broadcast
+ frame-relay map ip 10.1.0.4 301 broadcast
+```
+
+#### **Router R3 Configuration**
+```bash
+interface Serial0/0/0
+ encapsulation frame-relay
+ ip address 10.1.0.3 255.255.255.248
+ frame-relay map ip 10.1.0.4 302 broadcast
+ frame-relay map ip 10.4.0.1 102 broadcast
 ```
 
 ---
 
-## **Key Observations**
+## **Verification**
 
-1. **Successful ICMP Connectivity**:  
-   The simulation shows successful ping tests (ICMP packets) between all routers, indicating correct BGP configuration and route propagation.
+### **1. Frame Relay Map**
+Run the following command on any router to verify DLCI mappings:
+```bash
+show frame-relay map
+```
 
-2. **BGP Peering**:  
-   - eBGP sessions are established between routers in different AS (e.g., R70 and R1001).
-   - Frame Relay facilitates connectivity across the topology.
+### **2. Check Virtual Circuits**
+To ensure the virtual circuits are established and operational:
+```bash
+show frame-relay pvc
+```
 
-3. **Routing Table Validation**:  
-   Use the `show ip bgp` command to verify advertised and learned routes.
+### **3. Ping Test**
+Use ping to verify connectivity between devices. For example:
+```bash
+ping 10.1.0.2
+ping 10.4.0.2
+```
 
 ---
 
-## **Commands for Troubleshooting BGP**
+## **Troubleshooting**
 
-1. **Verify BGP Neighbors**:  
-   ```bash
-   show ip bgp neighbors
-   ```
+### **Common Issues**
+1. **Misconfigured DLCI**:  
+   Ensure that the DLCI matches the logical diagram configuration.
+2. **Interface Status**:  
+   Check if the serial interface is `UP/UP`. If not, verify cabling and encapsulation.
+3. **Broadcasts Not Working**:  
+   Add the `broadcast` keyword to Frame Relay maps to enable routing protocol advertisements.
 
-2. **Check BGP Routing Table**:  
-   ```bash
-   show ip bgp
-   ```
-
-3. **Verify Connectivity**:  
-   Use ping or traceroute commands.
+### **Useful Commands**
+- **View Interface Status**:
+  ```bash
+  show ip interface brief
+  ```
+- **Display Routing Table**:
+  ```bash
+  show ip route
+  ```
 
 ---
 
 ## **Conclusion**
 
-This topology demonstrates a functional implementation of BGP in a multipoint Frame Relay environment. It showcases the configuration of eBGP relationships, network advertisements, and successful route propagation between multiple autonomous systems.
+The provided Frame Relay topology demonstrates a robust multipoint setup with proper DLCI assignments, IP addressing, and interconnectivity verification. Both the physical Packet Tracer topology and the logical diagram align, showing the interconnection of R0, R1, R2, and R3 via a shared Frame Relay cloud.
 
-By understanding the above concepts and steps, you can replicate and modify this setup to fit specific networking requirements.
+By following the outlined configuration and verification steps, this setup can be replicated and customized for different WAN scenarios.
 
 --- 
 
+
+  
